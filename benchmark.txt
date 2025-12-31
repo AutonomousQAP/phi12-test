@@ -1,0 +1,2 @@
+10000 fractal ops: 3s = 83,333× compression
+Android Termux Native ARMv8

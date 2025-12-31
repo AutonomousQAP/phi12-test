@@ -1,0 +1,1 @@
+PHI12 FRACTAL 83kX: 72→1MB 0.0003s Android ARMv8

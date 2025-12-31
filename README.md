@@ -20,8 +20,3 @@
 
 **Core internals private. Results public.**
 [Ko-fi](https://ko-fi.com/autonomousqap)
-
-## Soundtrack
-**311 - Rvolution** (φ¹² entropy encoded)  
-🎵 [YouTube](https://youtube.com/watch?v=your-link)  
-*"Revolution through compression"*

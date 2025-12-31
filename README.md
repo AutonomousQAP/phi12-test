@@ -5,7 +5,7 @@
 ```
 72 bytes generator → 1MB output
 0.0003s/op | ≤12 internal states  
-83,000× state compression vs SVG
+83,333× state compression vs SVG
 ```
 
 ## Anti-Entropy

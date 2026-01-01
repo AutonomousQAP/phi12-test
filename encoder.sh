@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 echo "φ¹²=321.997 | 83,333× compression"
 echo "72B → 1MB glyphs | 0.0003s/op Android Termux"
 echo ""

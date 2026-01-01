@@ -1,399 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>φ¹² Fractal Invariant Sandbox v1.0</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root {
-            --phi: 1.618033988749895;
-            --phi12: 321.996894379;
-            --bg-void: #020106;
-            --accent-emerald: #00ff88;
-            --accent-cyan: #00f7ff;
-        }
-        body { 
-            background: var(--bg-void); 
-            color: white; 
-            font-family: 'JetBrains Mono', monospace;
-            padding: 20px;
-            margin: 0;
-        }
-        .invariant-panel {
-            margin: 12px 0;
-            padding: 12px;
-            background: rgba(0,80,150,0.2);
-            border-left: 4px solid var(--accent-emerald);
-            border-radius: 6px;
-            font-size: 11px;
-            color: #88ffaa;
-        }
-        .control-group { margin-bottom: 15px; }
-        button { 
-            padding: 10px 20px; 
-            background: rgba(0,255,136,0.2); 
-            border: 1px solid var(--accent-emerald);
-            color: white; 
-            border-radius: 6px;
-            cursor: pointer;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-        button:hover { background: rgba(0,255,136,0.4); }
-        canvas { 
-            border: 1px solid rgba(0,247,255,0.3); 
-            border-radius: 8px;
-            background: var(--bg-void);
-            max-width: 100%;
-        }
-        .metrics { 
-            background: rgba(0,0,0,0.85); 
-            padding: 20px; 
-            border-radius: 12px; 
-            font-size: 13px;
-            border: 1px solid rgba(0,247,255,0.2);
-        }
-        .metric-row { 
-            display: flex; 
-            justify-content: space-between; 
-            margin: 8px 0;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(0,247,255,0.1);
-        }
-        .log { 
-            height: 200px; 
-            overflow-y: auto; 
-            background: #111; 
-            padding: 15px; 
-            border-radius: 8px;
-            font-size: 12px;
-            border: 1px solid rgba(0,255,136,0.3);
-        }
-        .registry {
-            max-height: 250px;
-            overflow-y: auto;
-            background: rgba(0,80,150,0.3);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 11px;
-            border-left: 4px solid var(--accent-emerald);
-        }
-    </style>
-</head>
-<body>
-    <h1 style="color: var(--accent-cyan); font-size: 28px; margin-bottom: 20px;">
-        🧬 φ¹² FRACTAL INVARIANT SANDBOX v1.0
-    </h1>
-    
-    <!-- INVARIANT PANEL (Scoped to Experiment 4) -->
-    <div class="invariant-panel">
-        🔒 <strong>Design Invariant (Exp 4)</strong><br>
-        ∂S<sub>local</sub>/∂scale ≈ 0<br>
-        <span style="font-size:9px; color:#66ccaa;">Structural self-similarity, non-thermodynamic</span>
-    </div>
+<!-- UCP Transcendence Engine - Public Edition -->
+<!-- Connects to optional φ¹² backend if configured -->
 
-    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 30px; margin-top: 30px;">
-        <!-- CONTROLS + FRACTAL VISUALIZATION -->
-        <div>
-            <div class="control-group">
-                <button onclick="loadFractalWeightStructure()">🧬 Load φ¹² Structure</button>
-                <button onclick="runFractalAnalysis()">🚀 Run Experiment 4</button>
-                <button onclick="exportFractalData()">📊 Export CSV + Invariants</button>
-                <button onclick="exportInvariantRegistry()">📋 Export Registry</button>
-                <button onclick="clearLog()">🗑️ Clear Log</button>
-            </div>
+<script>
+// Configuration object (user-editable)
+const UCP_CONFIG = {
+  // If user has local Mistral setup, they can point here
+  phi12_endpoint: localStorage.getItem('phi12_endpoint') || null,
+  
+  // Public mode uses basic algorithms
+  fallback_mode: 'standard',
+  
+  // Feature flags
+  features: {
+    basic_analysis: true,      // Always available
+    fractal_viz: true,          // Always available
+    midi_estimation: true,      // Basic version public
+    stem_separation: false,     // Requires backend ⚠️
+    quantum_harmonics: false,   // Requires backend ⚠️
+    sheet_music_gen: false      // Requires backend ⚠️
+  }
+};
 
-            <div style="margin: 30px 0;">
-                <canvas id="fractalCanvas" width="900" height="650"></canvas>
-            </div>
+// Bridge function - gracefully handles offline mode
+async function processAudio(audioBuffer) {
+  if (UCP_CONFIG.phi12_endpoint) {
+    // USER HAS CONFIGURED LOCAL BACKEND
+    try {
+      const response = await fetch(UCP_CONFIG.phi12_endpoint + '/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          audio_data: encodeAudioForTransport(audioBuffer),
+          request_features: ['stems', 'midi', 'quantum_harmonics']
+        })
+      });
+      
+      const result = await response.json();
+      return {
+        mode: 'phi12_enhanced',
+        stems: result.stems,              // AI-separated tracks
+        midi: result.midi,                // High-fidelity conversion
+        harmonics: result.quantum_data,   // φ¹² analysis
+        geometry: result.sacred_geometry  // CAD-like structures
+      };
+    } catch (e) {
+      console.warn('φ¹² backend unavailable, using fallback');
+      return processAudioBasic(audioBuffer);
+    }
+  } else {
+    // PUBLIC MODE - No backend configured
+    return processAudioBasic(audioBuffer);
+  }
+}
 
-            <div class="metrics" id="metricsPanel">
-                <div class="metric-row"><span>Avg Fractal Dim:</span><span id="avgDim">--</span></div>
-                <div class="metric-row"><span>∂S/∂scale:</span><span id="scaleStable">--</span></div>
-                <div class="metric-row"><span>φ Proximity:</span><span id="phiProx">--</span></div>
-                <div class="metric-row"><span>Self-Similarity:</span><span id="selfSim">--</span></div>
-                <div class="metric-row"><span>Power-Law α:</span><span id="powerAlpha">--</span></div>
-                <div class="metric-row"><span>Violations:</span><span id="violations">0</span></div>
-            </div>
-        </div>
-
-        <!-- AUDIT LOG + REGISTRY -->
-        <div>
-            <h3 style="color: var(--accent-emerald); margin-bottom: 10px;">📋 Audit Log</h3>
-            <div id="log" class="log">
-                ✓ φ¹² Invariant Sandbox v1.0 initialized<br>
-                📍 Experiment 4 ready | ∂S/∂scale invariant enforced
-            </div>
-            
-            <h3 style="color: var(--accent-emerald); margin: 20px 0 10px 0;">🔒 Invariant Registry</h3>
-            <div id="registry" class="registry">
-                exp4_fractal: ∂S_local/∂scale ≈ 0 (validated: pending)
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // ═══════════════════════════════════════════════════════════════════════
-        // φ¹² INVARIANT SYSTEM v1.0 - PRODUCTION RESEARCH INSTRUMENT
-        // ═══════════════════════════════════════════════════════════════════════
-        
-        const PHI = 1.618033988749895;
-        const PHI_CONJ = 0.618033988749895;
-        
-        let invariantRegistry = [];
-        let fractalDimensions = [];
-        let logEl = document.getElementById('log');
-        let registryEl = document.getElementById('registry');
-        let canvas = document.getElementById('fractalCanvas');
-        let ctx = canvas.getContext('2d');
-        
-        // INVARIANT PRIMITIVES (scoped, auditable)
-        function registerInvariant(experimentId, invariant) {
-            invariantRegistry.push({
-                experimentId,
-                ...invariant,
-                validated: null,
-                violations: [],
-                timestamp: new Date().toISOString()
-            });
-            updateRegistryUI();
-            log(`✓ Registered: ${invariant.name}`);
-        }
-        
-        function checkInvariant(experimentId, metric, threshold, name) {
-            const violation = Math.abs(metric) > threshold;
-            
-            const record = invariantRegistry
-                .slice()
-                .reverse()
-                .find(r => r.experimentId === experimentId);
-            
-            if (!record) {
-                log(`⚠️ No registry for ${experimentId}`);
-                return true;
-            }
-            
-            record.violations.push({
-                name,
-                measured: metric,
-                threshold,
-                violated: violation,
-                timestamp: new Date().toISOString()
-            });
-            
-            record.validated = record.violations.every(v => !v.violated);
-            updateRegistryUI();
-            
-            if (violation) {
-                log(`⚠️ VIOLATION: ${name} (${metric.toFixed(4)} > ${threshold})`, 'error');
-                return false;
-            }
-            log(`✓ ${name}: ${metric.toFixed(4)} ✓`, 'success');
-            return true;
-        }
-        
-        // UI PRIMITIVES
-        function log(msg, type = 'info') {
-            const ts = new Date().toLocaleTimeString();
-            const color = type === 'error' ? '#ff4444' : 
-                         type === 'success' ? '#00ff88' : '#88ffaa';
-            logEl.innerHTML += `<div style="color: ${color}">[${ts}] ${msg}</div>`;
-            logEl.scrollTop = logEl.scrollHeight;
-        }
-        
-        function updateMetrics(data) {
-            document.getElementById('avgDim').textContent = data.avgDim?.toFixed(4) || '--';
-            document.getElementById('scaleStable').textContent = data.scaleStable ? '✓ ≈ 0' : '⚠️ VIOLATED';
-            document.getElementById('phiProx').innerHTML = `${data.phiProx?.toFixed(2) || '--'}% ${data.phiOk ? '✓' : '⚠️'}`;
-            document.getElementById('selfSim').textContent = `${data.selfSim?.toFixed(1) || '--'}%`;
-            document.getElementById('powerAlpha').textContent = data.alpha?.toFixed(4) || 'N/A';
-            document.getElementById('violations').textContent = invariantRegistry[invariantRegistry.length-1]?.violations.length || 0;
-        }
-        
-        function updateRegistryUI() {
-            registryEl.innerHTML = invariantRegistry.map(r => 
-                `${r.experimentId}: <strong>${r.name}</strong> ` +
-                `<span style="color: ${r.validated === null ? '#ffaa00' : 
-                                    r.validated ? '#00ff88' : '#ff4444'}">${r.validated === null ? '(pending)' : 
-                                    r.validated ? '(✓)' : '(✗)'}</span>`
-            ).join('<br>') || 'No invariants registered';
-        }
-        
-        function clearLog() {
-            logEl.innerHTML = '✓ Log cleared';
-        }
-        
-        // EXPERIMENT 4: φ¹² FRACTAL WEIGHT STRUCTURE
-        function loadFractalWeightStructure() {
-            // Register invariant FIRST (sandbox discipline)
-            registerInvariant('exp4_fractal', {
-                name: 'Local Structural Entropy ∂S_local/∂scale',
-                expected: 0,
-                tolerance: 0.05
-            });
-            
-            // Clear canvas
-            ctx.fillStyle = '#020106';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // φ¹² FRACTAL RENDER
-            ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.globalCompositeOperation = 'screen';
-            drawPhiFractal(ctx, 0, 0, 220, 0, 9, 0);
-            ctx.restore();
-            
-            log('✓ φ¹² weight structure loaded (Exp 4)');
-            log('📊 Ready for invariant analysis');
-        }
-        
-        function drawPhiFractal(ctx, x, y, len, angle, depth, branchId) {
-            if (depth <= 0 || len < 1.5) return;
-            
-            const ex = x + Math.cos(angle) * len;
-            const ey = y + Math.sin(angle) * len;
-            
-            // φ-scaled colors
-            const hue = (branchId * 137.5) % 360;
-            const alpha = 0.4 + (depth / 9) * 0.5;
-            ctx.strokeStyle = `hsla(${hue}, 75%, 55%, ${alpha})`;
-            ctx.lineWidth = Math.max(1, depth * 1.8);
-            ctx.lineCap = 'round';
-            ctx.shadowBlur = depth * 2;
-            ctx.shadowColor = `hsla(${hue}, 75%, 55%, 0.3)`;
-            
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            ctx.lineTo(ex, ey);
-            ctx.stroke();
-            
-            ctx.shadowBlur = 0;
-            
-            // φ¹² recursive branching
-            const nextLen = len * PHI_CONJ * (1 + Math.sin(Date.now() * 0.001 + branchId) * 0.1);
-            drawPhiFractal(ctx, ex, ey, nextLen, angle + Math.PI / PHI, depth - 1, branchId + 1);
-            drawPhiFractal(ctx, ex, ey, nextLen * 0.85, angle - Math.PI * PHI_CONJ, depth - 1, branchId + 2);
-        }
-        
-        // CORE ANALYSIS ENGINE (arXiv Appendix B)
-        function runFractalAnalysis() {
-            log('🚀 Running Experiment 4: φ¹² fractal analysis...');
-            
-            // Multi-scale fractal dimension analysis
-            const scales = 14;
-            fractalDimensions = [];
-            
-            for (let i = 0; i < scales; i++) {
-                const scale = Math.pow(2, i / 5);
-                // φ¹² convergence (near golden ratio)
-                const dim = PHI + (Math.random() - 0.5) * 0.015 * Math.exp(-i / 6);
-                fractalDimensions.push(dim);
-            }
-            
-            const avgDim = fractalDimensions.reduce((a, b) => a + b) / scales;
-            const scaleDelta = Math.abs(avgDim - fractalDimensions[0]); // ∂D/∂scale proxy
-            const proximityToPhi = Math.abs(avgDim - PHI) * 100;
-            const selfSimilarity = 1 - scaleDelta * 10;
-            const powerLawAlpha = 1.6180 + (Math.random() - 0.5) * 0.001;
-            
-            // INVARIANT VALIDATION (core research instrument)
-            const scaleStable = checkInvariant('exp4_fractal', scaleDelta, 0.05, '∂D/∂scale');
-            const phiConvergent = checkInvariant('exp4_fractal', proximityToPhi, 3.0, 'φ Convergence');
-            
-            // Update registry with measurements
-            const latest = invariantRegistry[invariantRegistry.length - 1];
-            if (latest) {
-                latest.measured = {
-                    avg_dim: avgDim.toFixed(4),
-                    phi_proximity: proximityToPhi.toFixed(2),
-                    scale_delta: scaleDelta.toFixed(4)
-                };
-            }
-            
-            // Observational metrics (no claims)
-            updateMetrics({
-                avgDim,
-                scaleStable,
-                phiProx: proximityToPhi,
-                phiOk: phiConvergent,
-                selfSim: selfSimilarity * 100,
-                alpha: powerLawAlpha
-            });
-            
-            log(`✅ Analysis complete: Dφ = ${avgDim.toFixed(4)}`);
-            log(`📈 φ-proximity: ${(100-proximityToPhi).toFixed(1)}% | Self-sim: ${selfSimilarity.toFixed(3)}`);
-            
-            if (scaleStable && phiConvergent) {
-                log('🎯 ALL INVARIANTS VALIDATED → arXiv Appendix B ready');
-            } else {
-                log('⚠️ Review flagged invariants before proceeding');
-            }
-        }
-        
-        // arXiv EXPORTS (Appendix artifacts)
-        window.exportFractalData = function() {
-            if (!fractalDimensions.length) {
-                log('⚠️ Run analysis first');
-                return;
-            }
-            const csv = [
-                'scale,dimension,∂S/∂scale,φ_proximity,self_similarity',
-                ...fractalDimensions.map((d, i) => 
-                    `${i},${d.toFixed(4)},${i ? Math.abs(d-fractalDimensions[i-1]).toFixed(4) : 0},${Math.abs(d-PHI).toFixed(4)},${(1-Math.abs(d-PHI)*10).toFixed(3)}`
-                ).join('
-')
-            ].join('
-');
-            download('phi12_fractal_invariants_' + Date.now() + '.csv', csv);
-        };
-        
-        window.exportInvariantRegistry = function() {
-            const json = {
-                session: Date.now(),
-                total_invariants: invariantRegistry.length,
-                invariants: invariantRegistry,
-                φ_constant: PHI.toFixed(10),
-                φ¹²_constant: Math.pow(PHI, 12).toFixed(6),
-                export_format: 'arXiv-v1',
-                validation_summary: {
-                    total_valid: invariantRegistry.filter(r => r.validated === true).length,
-                    total_violations: invariantRegistry.reduce((sum, r) => sum + (r.violations?.length || 0), 0)
-                }
-            };
-            download('phi12_invariant_registry_' + Date.now() + '.json', JSON.stringify(json, null, 2));
-        };
-        
-        function download(filename, content) {
-            const blob = new Blob([content], { 
-                type: filename.endsWith('.csv') ? 'text/csv' : 'application/json' 
-            });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            log(`✓ Exported ${filename}`);
-        }
-        
-        // CANVAS RESIZE
-        function resizeCanvas() {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = Math.max(800, rect.width - 40);
-            canvas.height = Math.max(600, window.innerHeight * 0.6);
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-        
-        // INIT
-        log('🚀 φ¹² Invariant Sandbox v1.0 PRODUCTION');
-        log('📍 Experiment 4: ∂S_local/∂scale ≈ 0 enforced');
-        log('🎯 Ready for arXiv Appendix B validation');
-        
-        updateRegistryUI();
-    </script>
-</body>
-</html>
+// Basic processing (always works, no secrets exposed)
+function processAudioBasic(audioBuffer) {
+  const analyser = createAnalyser(audioBuffer);
+  const freqData = getFrequencyData(analyser);
+  
+  return {
+    mode: 'basic',
+    bpm: estimateBPM(freqData),           // Simple autocorrelation
+    key: estimateKey(freqData),           // Peak frequency detection
+    energy: calculateEnergy(freqData),
+    midi: generateBasicMIDI(freqData),    // Crude but functional
+    visualization: generateFractalParams(freqData)
+  };
+}
+</script>
